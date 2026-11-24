@@ -240,10 +240,19 @@ def main():
         print("Game has started; nothing to track.")
         return
 
-    stats = event.get("stats", {}) or {}
-    price = stats.get("lowest_price")
+    # SeatGeek puts prices in "stats" and/or "availability" depending on the event.
+    stats = {}
+    for section in ("stats", "availability"):
+        for k, v in (event.get(section) or {}).items():
+            if v is not None and stats.get(k) is None:
+                stats[k] = v
+    price = stats.get("lowest_price") or stats.get("lowest_sg_base_price")
     if price is None:
         print("No listings/price right now.")
+        print(f"Debug: event {event.get('id')} | {event.get('title')} | {event.get('datetime_local')}")
+        print(f"Debug: stats={event.get('stats')}")
+        print(f"Debug: availability={event.get('availability')}")
+        print(f"Debug: top-level keys={sorted(event.keys())}")
         return
     price = float(price)
 
